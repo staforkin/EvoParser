@@ -1,5 +1,6 @@
 ﻿using EvoParserApi;
 using HtmlAgilityPack;
+using System.Globalization;
 
 internal class EvoScraper : IScraper<EvoProduct>
 {
@@ -20,29 +21,67 @@ internal class EvoScraper : IScraper<EvoProduct>
 
         foreach (var node in productNodes)
         {
+            var product = BuildProductFrom(node);
+            if (product != null)
+            {
+                res.Add(product);
+            }
+        }
+
+        return res;
+    }
+
+    private EvoProduct? BuildProductFrom(HtmlNode node)
+    {
+        try
+        {
             var a = node.Descendants("a").First();
             var productId = node.GetAttributeValue("data-productid", 0);
             var name = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("product-thumb-title")).First().InnerText;
             var uri = new Uri($"https://evo.com{a.GetAttributeValue("href", string.Empty)}");
             var imageUri = new Uri(a.Descendants("img").Where(i => i.GetAttributeValue("class", string.Empty).Contains("product-thumb-image")).First().GetAttributeValue("src", string.Empty));
 
-            string regularPrice;
-            string? outletPrice = null;
+            string regularPriceString;
+            string? outletPriceString = null;
             var outletPriceNode = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("discount")).LastOrDefault();
             if (outletPriceNode != null)
             {
-                regularPrice = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("product-thumb-price slash")).First().InnerText;
-                outletPrice = outletPriceNode.InnerText?.Split("\n", StringSplitOptions.RemoveEmptyEntries)?.FirstOrDefault();
+                var productThumbPrice = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("product-thumb-price"));
+                if (productThumbPrice.Any(i => i.HasClass("slash")))
+                {
+                    regularPriceString = productThumbPrice.First(i => i.HasClass("slash")).InnerText;
+                }
+                else
+                {
+                    regularPriceString = productThumbPrice.Last().Descendants("span").Last().InnerText;
+                }
+                outletPriceString = outletPriceNode.InnerText?.Split("\n", StringSplitOptions.RemoveEmptyEntries)?.FirstOrDefault();
             }
             else
             {
-                regularPrice = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("product-thumb-price")).First()
+                regularPriceString = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("product-thumb-price")).First()
                             .Descendants("span").First().InnerText;
             }
-            regularPrice = regularPrice.Split("\n", StringSplitOptions.RemoveEmptyEntries).First();
-            res.Add(new EvoProduct(productId, name, uri, imageUri, regularPrice, outletPrice, false, null, null));
-        }
+            regularPriceString = regularPriceString.Split("\n", StringSplitOptions.RemoveEmptyEntries).First();
+            double price = default;
+            price = double.Parse(regularPriceString.Substring(1), CultureInfo.InvariantCulture);
+            double? outletPrice = outletPriceString == null ? null : double.Parse(outletPriceString.Substring(1), CultureInfo.InvariantCulture);
 
-        return res;
+            double? rating = null;
+            // https://display.powerreviews.com/m/4163/l/en_US/product/203890/snippet?apikey=e5fcb978-8192-44d7-8fd1-b4e14fd1a523&_noconfig=true
+            var ratingDiv = a.Descendants("div").Where(i => i.HasClass("pr-snippet-rating-decimal"));
+            if (ratingDiv.Any())
+            {
+                rating = double.Parse(ratingDiv.FirstOrDefault()?.InnerText, CultureInfo.InvariantCulture);
+            }
+
+            return new EvoProduct(productId, name, uri, imageUri, price, outletPrice, false, rating, null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Console.WriteLine(node.InnerHtml);
+        }
+        return null;
     }
 }

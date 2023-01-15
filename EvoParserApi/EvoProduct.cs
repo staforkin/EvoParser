@@ -3,7 +3,11 @@ using System.Globalization;
 
 internal class EvoProduct
 {
-    public EvoProduct(int id, string name, Uri uri, Uri imageUri, string regularPrice, string? outletPrice, bool inStoreOnly, double? rating, int? reviewsCount)
+    public EvoProduct()
+    {
+    }
+
+    public EvoProduct(int id, string name, Uri uri, Uri imageUri, double regularPrice, double? outletPrice, bool inStoreOnly, double? rating, int? reviewsCount)
     {
         Id = id;
         Name = name;
@@ -24,22 +28,18 @@ internal class EvoProduct
 
     public Uri? ImageUri { get; private set; }
 
-    public string RegularPrice { get; private set; }
+    public double RegularPrice { get; private set; }
 
-    public string? OutletPrice { get; private set; }
+    public double? OutletPrice { get; private set; }
 
     public double? DiscountPercent
     {
         get
         {
-            double price = default;
-            price = double.Parse(RegularPrice.Substring(1), CultureInfo.InvariantCulture);
-
-            double? outlet = OutletPrice == null ? null : double.Parse(OutletPrice.Substring(1), CultureInfo.InvariantCulture);
             double? saving = null;
-            if (outlet.HasValue)
+            if (OutletPrice.HasValue)
             {
-                saving = (price - outlet) * 100 / price;
+                saving = (RegularPrice - OutletPrice.Value) / RegularPrice;
             }
             return saving;
         }
