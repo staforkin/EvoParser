@@ -1,7 +1,4 @@
-﻿
-using System.Globalization;
-
-internal class EvoProduct
+﻿internal class EvoProduct
 {
     public EvoProduct()
     {
@@ -47,7 +44,7 @@ internal class EvoProduct
 
     public bool InStoreOnly { get; private set; }
 
-    public Double? Rating { get; private set; }
+    public Double? Rating { get; set; }
 
-    public int? ReviewsCount { get; private set; }
+    public int? ReviewsCount { get; set; }
 }

@@ -4,11 +4,10 @@ using System.Globalization;
 
 internal class EvoScraper : IScraper<EvoProduct>
 {
-    public async Task<IEnumerable<EvoProduct>> ScrapeAsync(string url)
+    public async Task<IEnumerable<EvoProduct>> ScrapeAsync(HttpClient httpClient, string url)
     {
         var res = new List<EvoProduct>();
-        HttpClient client = new HttpClient();
-        var response = await client.GetStringAsync(url);
+        var response = await httpClient.GetStringAsync(url);
         var htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(response);
         if (htmlDocument == null)
@@ -67,15 +66,7 @@ internal class EvoScraper : IScraper<EvoProduct>
             price = double.Parse(regularPriceString.Substring(1), CultureInfo.InvariantCulture);
             double? outletPrice = outletPriceString == null ? null : double.Parse(outletPriceString.Substring(1), CultureInfo.InvariantCulture);
 
-            double? rating = null;
-            // https://display.powerreviews.com/m/4163/l/en_US/product/203890/snippet?apikey=e5fcb978-8192-44d7-8fd1-b4e14fd1a523&_noconfig=true
-            var ratingDiv = a.Descendants("div").Where(i => i.HasClass("pr-snippet-rating-decimal"));
-            if (ratingDiv.Any())
-            {
-                rating = double.Parse(ratingDiv.FirstOrDefault()?.InnerText, CultureInfo.InvariantCulture);
-            }
-
-            return new EvoProduct(productId, name, uri, imageUri, price, outletPrice, false, rating, null);
+            return new EvoProduct(productId, name, uri, imageUri, price, outletPrice, false, null, null);
         }
         catch (Exception ex)
         {

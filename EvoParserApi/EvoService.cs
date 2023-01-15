@@ -1,11 +1,15 @@
 ﻿using System.Diagnostics;
-using System.Globalization;
 
 internal class EvoService
 {
-    public EvoService(EvoScraper scraper)
+    private readonly HttpClient httpClient;
+    private readonly IRatingService ratingService;
+
+    public EvoService(EvoScraper scraper, HttpClient httpClient, IRatingService ratingService)
     {
         Scraper = scraper;
+        this.httpClient = httpClient;
+        this.ratingService = ratingService;
     }
 
     public EvoScraper Scraper { get; }
@@ -14,10 +18,20 @@ internal class EvoService
     {
         var sw = Stopwatch.StartNew();
         var uri = $"https://www.evo.com/{request}";
-        var items = await Scraper.ScrapeAsync(uri);
+        var items = await Scraper.ScrapeAsync(httpClient, uri);
         foreach (var item in items)
         {
-            Console.WriteLine($"{item.RegularPrice}\t{(item.OutletPrice.HasValue ? item.OutletPrice.Value : "--")}\t{(item.DiscountPercent.HasValue ? (item.DiscountPercent.Value).ToString("P") : "--")}\t{item.Name}");
+            var rating = await ratingService.GetRatingsAsync(new int[] { item.Id });
+            item.Rating = rating != null ? rating.Results.FirstOrDefault()?.Rollup.AverageRating : null;
+            item.ReviewsCount = rating != null ? rating.Results.FirstOrDefault()?.Rollup.ReviewCount : null;
+        }
+        foreach (var item in items)
+        {
+            Console.WriteLine($"{item.RegularPrice}\t{(item.OutletPrice.HasValue ? item.OutletPrice.Value : "--")}" +
+                $"\t{(item.DiscountPercent.HasValue ? (item.DiscountPercent.Value).ToString("P") : "--")}" +
+                $"\t{(item.Rating.HasValue ? item.Rating : "--")}" +
+                $"\t{(item.ReviewsCount.HasValue ? item.ReviewsCount : "--")}" +
+                $"\t{item.Name}");
         }
         sw.Stop();
         Console.WriteLine($"elapsed={sw.Elapsed.TotalMilliseconds}");

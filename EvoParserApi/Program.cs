@@ -1,6 +1,7 @@
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<EvoScraper>();
-builder.Services.AddScoped<EvoService>();
+builder.Services.AddHttpClient<IRatingService, RatingService>();
+builder.Services.AddHttpClient<EvoService>();
 var app = builder.Build();
 
 app.MapGet("/gore-tex-jackets", async (EvoService evoService) => await evoService.GetProducts());
