@@ -2,8 +2,9 @@
 
 internal class ReviewResult
 {
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
     [JsonPropertyName("page_id")]
-    public string PageId { get; set; }
+    public int PageId { get; set; }
 
     [JsonPropertyName("rollup")]
     public ReviewRollup Rollup { get; set; }

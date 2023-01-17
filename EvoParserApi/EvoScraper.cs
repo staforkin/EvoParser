@@ -43,9 +43,9 @@ internal class EvoScraper : IScraper<EvoProduct>
             string regularPriceString;
             string? outletPriceString = null;
             var outletPriceNode = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("discount")).LastOrDefault();
+            var productThumbPrice = a.Descendants("span").Where(i => i.HasClass("product-thumb-price"));
             if (outletPriceNode != null)
             {
-                var productThumbPrice = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("product-thumb-price"));
                 if (productThumbPrice.Any(i => i.HasClass("slash")))
                 {
                     regularPriceString = productThumbPrice.First(i => i.HasClass("slash")).InnerText;
@@ -58,10 +58,9 @@ internal class EvoScraper : IScraper<EvoProduct>
             }
             else
             {
-                regularPriceString = a.Descendants("span").Where(i => i.GetAttributeValue("class", string.Empty).Contains("product-thumb-price")).First()
-                            .Descendants("span").First().InnerText;
+                regularPriceString = productThumbPrice.First().Descendants("span").First().InnerText;
             }
-            regularPriceString = regularPriceString.Split("\n", StringSplitOptions.RemoveEmptyEntries).First();
+            regularPriceString = regularPriceString.Split("\n", StringSplitOptions.RemoveEmptyEntries).First().Trim();
             double price = default;
             price = double.Parse(regularPriceString.Substring(1), CultureInfo.InvariantCulture);
             double? outletPrice = outletPriceString == null ? null : double.Parse(outletPriceString.Substring(1), CultureInfo.InvariantCulture);
