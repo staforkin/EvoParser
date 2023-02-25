@@ -4,7 +4,7 @@
     {
     }
 
-    public EvoProduct(int id, string name, Uri uri, Uri imageUri, double regularPrice, double? outletPrice, bool inStoreOnly, double? rating, int? reviewsCount)
+    public EvoProduct(int id, string name, Uri uri, Uri imageUri, double regularPrice, double? outletPrice, bool inStoreOnly, double? rating, int? reviewsCount, bool clearance)
     {
         Id = id;
         Name = name;
@@ -15,6 +15,7 @@
         InStoreOnly = inStoreOnly;
         Rating = rating;
         ReviewsCount = reviewsCount;
+        Clearance = clearance;
     }
 
     public int Id { get; private set; }
@@ -47,4 +48,6 @@
     public Double? Rating { get; set; }
 
     public int? ReviewsCount { get; set; }
+
+    public bool Clearance { get; private set; }
 }

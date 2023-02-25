@@ -36,6 +36,7 @@ internal class EvoService
                 $"\t{(item.DiscountPercent.HasValue ? (item.DiscountPercent.Value).ToString("P") : "--")}" +
                 $"\t{(item.Rating.HasValue ? item.Rating : "--")}" +
                 $"\t{(item.ReviewsCount.HasValue ? item.ReviewsCount : "--")}" +
+                $"\t{item.Clearance}" +
                 $"\t{item.Name}");
         }
         sw.Stop();
